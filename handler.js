@@ -142,6 +142,7 @@ function sendRelays(req, arg2, arg3, endpoint, cb) {
     /*eslint max-statements: [2, 25], max-params: [2, 6]*/
     var self = this;
     var services = arg3.services;
+    var done = false;
 
     var servicesByExitNode = {};
 
@@ -184,20 +185,34 @@ function sendRelays(req, arg2, arg3, endpoint, cb) {
         }, onFinish);
     }
 
+    var timerHandle = setTimeout(onTimeout, 250);
+
     onFinish();
 
     // TODO remove blocking on fanout finish. Requires fixing
     // hyperbahn tests upstream
     function onFinish() {
         if (--counter === 0) {
-            cb(null, {
-                ok: true,
-                head: null,
-                body: {
-                    connectionCount: exitNodeKeys.length
-                }
-            });
+            clearTimeout(timerHandle);
+            sendResponse();
         }
+    }
+
+    function onTimeout() {
+    }
+
+    function sendResponse() {
+        if (done) {
+            return;
+        }
+        done = true;
+        cb(null, {
+            ok: true,
+            head: null,
+            body: {
+                connectionCount: exitNodeKeys.length
+            }
+        });
     }
 };
 
